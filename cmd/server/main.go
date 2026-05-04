@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/bootdotdev/learn-pub-sub-starter/internal/gamelogic"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/pubsub"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/routing"
 
@@ -26,17 +27,80 @@ func main() {
 		log.Fatalf("could not create channel: %v", err)
 	}
 
-	err = pubsub.PublishJSON(
-		channel,
-		routing.ExchangePerilDirect,
-		routing.PauseKey,
-		routing.PlayingState{
-			IsPaused: true,
-		},
-	)
-	if err != nil {
-		log.Printf("could not publish time: %v", err)
-	}
-	fmt.Println("Pause message sent!")
+	gamelogic.PrintServerHelp()
 
+	for {
+		words := gamelogic.GetInput()
+		if len(words) == 0 {
+			continue
+		}
+		switch words[0] {
+		case "pause":
+			fmt.Println("Publishing paused game state")
+			err = pubsub.PublishJSON(
+				channel,
+				routing.ExchangePerilDirect,
+				routing.PauseKey,
+				routing.PlayingState{
+					IsPaused: true,
+				},
+			)
+			if err != nil {
+				log.Printf("could not publish time: %v", err)
+			}
+		case "resume":
+			fmt.Println("Publishing resumes game state")
+			err = pubsub.PublishJSON(
+				channel,
+				routing.ExchangePerilDirect,
+				routing.PauseKey,
+				routing.PlayingState{
+					IsPaused: false,
+				},
+			)
+			if err != nil {
+				log.Printf("could not publish time: %v", err)
+			}
+		case "quit":
+			log.Println("Quiting game")
+			return
+		default:
+			fmt.Println("unknown command")
+		}
+	}
 }
+
+/* original code, implemented it as a switch statement after
+	for {
+		input := gamelogic.GetInput()
+		if strings.ToLower(input[0]) == "pause" {
+			log.Println("Pausing game")
+			err = pubsub.PublishJSON(
+				channel,
+				routing.ExchangePerilDirect,
+				routing.PauseKey,
+				routing.PlayingState{
+					IsPaused: true,
+				},
+			)
+		}
+
+		if strings.ToLower(input[0]) == "resume" {
+			log.Println("Resuming game")
+			err = pubsub.PublishJSON(
+				channel,
+				routing.ExchangePerilDirect,
+				routing.PauseKey,
+				routing.PlayingState{
+					IsPaused: false,
+				},
+			)
+		}
+
+		if strings.ToLower(input[0]) == "quit" {
+			log.Println("Quiting game")
+			break
+		}
+	}
+
+}*/
