@@ -27,6 +27,18 @@ func main() {
 		log.Fatalf("could not create channel: %v", err)
 	}
 
+	_, queue, err := pubsub.DeclareAndBind(
+		conn,
+		routing.ExchangePerilTopic,
+		routing.GameLogSlug,
+		routing.GameLogSlug+"*",
+		pubsub.SimpleQueueDurable,
+	)
+	if err != nil {
+		log.Fatalf("Couldn't bind to queue: %v", err)
+	}
+	fmt.Printf("Queue %v declared and bound!\n", queue.Name)
+
 	gamelogic.PrintServerHelp()
 
 	for {
@@ -69,38 +81,3 @@ func main() {
 		}
 	}
 }
-
-/* original code, implemented it as a switch statement after
-	for {
-		input := gamelogic.GetInput()
-		if strings.ToLower(input[0]) == "pause" {
-			log.Println("Pausing game")
-			err = pubsub.PublishJSON(
-				channel,
-				routing.ExchangePerilDirect,
-				routing.PauseKey,
-				routing.PlayingState{
-					IsPaused: true,
-				},
-			)
-		}
-
-		if strings.ToLower(input[0]) == "resume" {
-			log.Println("Resuming game")
-			err = pubsub.PublishJSON(
-				channel,
-				routing.ExchangePerilDirect,
-				routing.PauseKey,
-				routing.PlayingState{
-					IsPaused: false,
-				},
-			)
-		}
-
-		if strings.ToLower(input[0]) == "quit" {
-			log.Println("Quiting game")
-			break
-		}
-	}
-
-}*/
